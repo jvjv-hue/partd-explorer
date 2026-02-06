@@ -1,9 +1,4 @@
 <?php
-// Prevent any output before headers (critical for CSV export)
-ob_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // Hide errors during export
-
 require_once 'config.php';
 
 $brand = trim($_GET['brand'] ?? '');
@@ -13,17 +8,13 @@ if (empty($brand)) {
     die("<div class='container mt-5'><div class='alert alert-danger'>No drug selected.</div></div>");
 }
 
-// ────────────────────────────────────────────────
-// Pagination settings (only for on-screen display)
-// ────────────────────────────────────────────────
-$per_page = 25; // ← adjust as needed (50, 100, etc.)
+// Pagination settings
+$per_page = 25;
 $page = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($page - 1) * $per_page;
 
 try {
-    // ────────────────────────────────────────────────
-    // 1. Aggregated totals for this drug (nationwide)
-    // ────────────────────────────────────────────────
+    // Aggregated totals
     $where_agg = "Brnd_Name = :brand";
     $params_agg = ['brand' => $brand];
     if ($generic !== '') {
@@ -52,20 +43,14 @@ try {
     $stmt_agg->execute($params_agg);
     $agg = $stmt_agg->fetch();
 
-    // ────────────────────────────────────────────────
-    // 2. Total count of prescribers for pagination
-    // ────────────────────────────────────────────────
+    // Total count
     $count_sql = "SELECT COUNT(DISTINCT Prscrbr_NPI) AS total FROM mup_dpr WHERE $where_agg";
     $count_stmt = $pdo->prepare($count_sql);
     $count_stmt->execute($params_agg);
     $total_prescribers = (int)$count_stmt->fetchColumn();
     $total_pages = max(1, ceil($total_prescribers / $per_page));
 
-    // ────────────────────────────────────────────────
-    // 3. Paginated list of prescribers (display only)
-    // ────────────────────────────────────────────────
-    $where_list = $where_agg;
-    $params_list = $params_agg;
+    // Paginated prescribers
     $sql_list = "
         SELECT
             Prscrbr_NPI,
@@ -77,13 +62,13 @@ try {
             SUM(Tot_Clms) AS Prescriber_Clms,
             SUM(Tot_Drug_Cst) AS Prescriber_Cost
         FROM mup_dpr
-        WHERE $where_list
+        WHERE $where_agg
         GROUP BY Prscrbr_NPI
         ORDER BY Prescriber_Clms DESC
         LIMIT :limit OFFSET :offset
     ";
     $stmt_list = $pdo->prepare($sql_list);
-    foreach ($params_list as $k => $v) {
+    foreach ($params_agg as $k => $v) {
         $stmt_list->bindValue(":$k", $v);
     }
     $stmt_list->bindValue(':limit', $per_page, PDO::PARAM_INT);
@@ -91,14 +76,9 @@ try {
     $stmt_list->execute();
     $prescribers = $stmt_list->fetchAll();
 
-    // ────────────────────────────────────────────────
-    // Export ALL NPIs to CSV (no limit - streams everything)
-    // ────────────────────────────────────────────────
+    // Export ALL
     if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-        // Clear any accidental output
         ob_end_clean();
-
-        // Force CSV headers
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="npis_' . urlencode($brand) . ($generic ? '_' . urlencode($generic) : '') . '.csv"');
         header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -106,20 +86,8 @@ try {
         header('Expires: 0');
 
         $output = fopen('php://output', 'w');
+        fputcsv($output, ['NPI', 'Last/Org Name', 'First Name', 'City', 'State', 'Type', 'Claims for this Drug', 'Drug Cost for this Drug']);
 
-        // CSV header row
-        fputcsv($output, [
-            'NPI',
-            'Last/Org Name',
-            'First Name',
-            'City',
-            'State',
-            'Type',
-            'Claims for this Drug',
-            'Drug Cost for this Drug'
-        ]);
-
-        // Full export query - no LIMIT
         $export_sql = "
             SELECT
                 Prscrbr_NPI,
@@ -131,17 +99,16 @@ try {
                 SUM(Tot_Clms) AS Prescriber_Clms,
                 SUM(Tot_Drug_Cst) AS Prescriber_Cost
             FROM mup_dpr
-            WHERE $where_list
+            WHERE $where_agg
             GROUP BY Prscrbr_NPI
             ORDER BY Prescriber_Clms DESC
         ";
         $stmt_export = $pdo->prepare($export_sql);
-        foreach ($params_list as $k => $v) {
+        foreach ($params_agg as $k => $v) {
             $stmt_export->bindValue(":$k", $v);
         }
         $stmt_export->execute();
 
-        // Stream every row directly to CSV
         while ($p = $stmt_export->fetch(PDO::FETCH_ASSOC)) {
             fputcsv($output, [
                 $p['Prscrbr_NPI'] ?? '',
@@ -154,18 +121,11 @@ try {
                 $p['Prescriber_Cost'] ?? 0.00
             ]);
         }
-
         fclose($output);
         exit;
     }
 
 } catch (PDOException $e) {
-    // During export we don't want HTML error - just fail quietly or log
-    if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-        header('Content-Type: text/plain');
-        echo "Export failed: " . $e->getMessage();
-        exit;
-    }
     die("<div class='container mt-5'><div class='alert alert-danger'>Database error: " . htmlspecialchars($e->getMessage()) . "</div></div>");
 }
 ?>
@@ -180,16 +140,13 @@ try {
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 <body>
-    <main class="flex-grow-1">
-        <div class="container">
-    
-    
+
 <div class="container my-4">
     <a href="javascript:history.back()" class="btn btn-outline-secondary mb-4">
         <i class="bi bi-arrow-left me-2"></i>Back
     </a>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm position-relative">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-1"><?= htmlspecialchars($brand) ?></h4>
             <?php if ($generic): ?>
@@ -200,7 +157,17 @@ try {
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body position-relative">
+            <!-- Loading overlay -->
+            <div class="loading-overlay active" id="loading-overlay">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="loading-text">Loading prescribers...</div>
+                </div>
+            </div>
+
             <!-- Aggregated totals -->
             <div class="row g-3 mb-5 bg-light p-3 rounded">
                 <div class="col-md-3 col-6">
@@ -322,8 +289,25 @@ try {
     </div>
 </div>
 
-</div>
-    </main>
 <?php include 'footer.php'; ?>
+
+<script>
+// Hide loading overlay once page is ready
+window.addEventListener('load', function() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.remove('active');
+});
+
+// Re-show on pagination clicks
+document.querySelectorAll('.pagination a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        if (!this.parentElement.classList.contains('disabled')) {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.classList.add('active');
+        }
+    });
+});
+</script>
+
 </body>
 </html>
