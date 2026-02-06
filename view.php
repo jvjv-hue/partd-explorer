@@ -22,7 +22,7 @@ try {
         die("<div class='container mt-5'><div class='alert alert-warning'>No data found for NPI $npi.</div></div>");
     }
 
-    // Aggregated drugs with unique prescriber count per drug
+    // Aggregated drugs
     $stmt = $pdo->prepare("
         SELECT 
             Brnd_Name,
@@ -38,8 +38,7 @@ try {
             SUM(GE65_Tot_Drug_Cst) AS GE65_Tot_Drug_Cst,
             SUM(GE65_Tot_Day_Suply) AS GE65_Tot_Day_Suply,
             MAX(GE65_Bene_Sprsn_Flag) AS GE65_Bene_Sprsn_Flag,
-            SUM(GE65_Tot_Benes) AS GE65_Tot_Benes,
-            COUNT(DISTINCT Prscrbr_NPI) AS unique_prescribers
+            SUM(GE65_Tot_Benes) AS GE65_Tot_Benes
         FROM mup_dpr
         WHERE Prscrbr_NPI = :npi
         GROUP BY Brnd_Name, Gnrc_Name
@@ -146,26 +145,24 @@ try {
                                 <th class="text-end">Day Supply</th>
                                 <th class="text-end">Drug Cost</th>
                                 <th class="text-end">Beneficiaries</th>
-                                <th class="text-end">Prescribers</th>
                                 <th class="text-end">GE65 Claims / Cost</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($drugs as $drug): ?>
                             <tr>
-                                <td data-label="Brand Name"><?= htmlspecialchars($drug['Brnd_Name'] ?: 'N/A') ?></td>
+                                <td data-label="Brand Name">
+                                    <a href="drug.php?brand=<?= urlencode($drug['Brnd_Name'] ?? '') ?>&generic=<?= urlencode($drug['Gnrc_Name'] ?? '') ?>" 
+                                       class="text-primary text-decoration-none">
+                                        <?= htmlspecialchars($drug['Brnd_Name'] ?: 'N/A') ?>
+                                    </a>
+                                </td>
                                 <td data-label="Generic Name"><?= htmlspecialchars($drug['Gnrc_Name'] ?: 'N/A') ?></td>
                                 <td data-label="Total Claims" class="text-end"><?= number_format($drug['Tot_Clms'] ?? 0) ?></td>
                                 <td data-label="30-Day Fills" class="text-end"><?= number_format($drug['Tot_30day_Fills'] ?? 0, 1) ?></td>
                                 <td data-label="Day Supply" class="text-end"><?= number_format($drug['Tot_Day_Suply'] ?? 0) ?></td>
                                 <td data-label="Drug Cost" class="text-end">$<?= number_format($drug['Tot_Drug_Cst'] ?? 0, 2) ?></td>
                                 <td data-label="Beneficiaries" class="text-end"><?= number_format($drug['Tot_Benes'] ?? 0) ?></td>
-                                <td data-label="Prescribers" class="text-end">
-                                    <a href="drug.php?brand=<?= urlencode($drug['Brnd_Name'] ?? '') ?>&generic=<?= urlencode($drug['Gnrc_Name'] ?? '') ?>" 
-                                       class="btn btn-sm btn-outline-info">
-                                        <?= number_format($drug['unique_prescribers'] ?? 1) ?> doctor<?= ($drug['unique_prescribers'] ?? 1) != 1 ? 's' : '' ?>
-                                    </a>
-                                </td>
                                 <td data-label="GE65 Claims / Cost" class="text-end">
                                     <?= htmlspecialchars($drug['GE65_Sprsn_Flag'] ?? '') ?> 
                                     <?= number_format($drug['GE65_Tot_Clms'] ?? 0) ?> / 
