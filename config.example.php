@@ -1,10 +1,10 @@
 <?php
 // config.php - NEVER commit this to git/public!
 
-define('DB_HOST', 'localhost');          // or your server IP
-define('DB_NAME', 'millers_datahis');
-define('DB_USER', 'millers_redibiz');
-define('DB_PASS', 'G0ffman!');
+define('DB_HOST', '');          // or your server IP
+define('DB_NAME', '');
+define('DB_USER', '');
+define('DB_PASS', '!');
 define('DB_CHARSET', 'utf8mb4');
 
 try {
@@ -21,4 +21,5 @@ try {
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
+
 
