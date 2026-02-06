@@ -7,7 +7,7 @@ if (!$npi) {
 }
 
 try {
-    // Prescriber basic info
+    // Prescriber info
     $stmt = $pdo->prepare("
         SELECT Prscrbr_Last_Org_Name, Prscrbr_First_Name, Prscrbr_City, 
                Prscrbr_State_Abrvtn, Prscrbr_Type
@@ -75,8 +75,7 @@ try {
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 <body>
-<main class="flex-grow-1">
-        <div class="container">
+
 <div class="container">
     <a href="index.php" class="btn btn-outline-secondary mb-4">
         <i class="bi bi-arrow-left me-2"></i>Back to Search
@@ -96,13 +95,23 @@ try {
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body position-relative">
+            <!-- Loading Overlay -->
+            <div class="loading-overlay active" id="loading-overlay">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="loading-text">Loading prescriber data...</div>
+                </div>
+            </div>
+
             <?php if (empty($drugs)): ?>
                 <div class="p-5 text-center text-muted fs-5">
                     No prescription records found for this prescriber.
                 </div>
             <?php else: ?>
-                <!-- Grand Totals Section - Now above the table -->
+                <!-- Grand Totals -->
                 <div class="bg-light p-3 rounded mb-4 border">
                     <h5 class="mb-3 text-primary">Grand Totals</h5>
                     <div class="row g-3">
@@ -122,22 +131,9 @@ try {
                             <div class="fw-bold">Drug Cost</div>
                             <div class="fs-5 text-danger">$<?= number_format($totals['Tot_Drug_Cst'], 2) ?></div>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <div class="fw-bold">Beneficiaries</div>
-                            <div class="fs-5"><?= number_format($totals['Tot_Benes']) ?></div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="fw-bold">GE65 Claims</div>
-                            <div class="fs-5"><?= number_format($totals['GE65_Tot_Clms']) ?></div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="fw-bold">GE65 Drug Cost</div>
-                            <div class="fs-5 text-danger">$<?= number_format($totals['GE65_Tot_Drug_Cst'], 2) ?></div>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Main Table -->
                 <div class="table-responsive">
                     <table class="table table-striped table-hover mb-0">
                         <thead>
@@ -152,33 +148,24 @@ try {
                                 <th class="text-end">GE65 Claims / Cost</th>
                             </tr>
                         </thead>
-                      
-                      <tbody>
-    <?php foreach ($drugs as $drug): ?>
-    <tr>
-        <td data-label="Brand Name">
-            <a href="drug.php?brand=<?= urlencode($drug['Brnd_Name'] ?? 'N/A') ?>&generic=<?= urlencode($drug['Gnrc_Name'] ?? 'N/A') ?>" 
-               class="text-primary text-decoration-none fw-medium">
-                <?= htmlspecialchars($drug['Brnd_Name'] ?: 'N/A') ?>
-            </a>
-        </td>
-        <td data-label="Generic Name"><?= htmlspecialchars($drug['Gnrc_Name'] ?: 'N/A') ?></td>
-        <td data-label="Total Claims" class="text-end"><?= number_format($drug['Tot_Clms'] ?? 0) ?></td>
-        <td data-label="30-Day Fills" class="text-end"><?= number_format($drug['Tot_30day_Fills'] ?? 0, 1) ?></td>
-        <td data-label="Day Supply" class="text-end"><?= number_format($drug['Tot_Day_Suply'] ?? 0) ?></td>
-        <td data-label="Drug Cost" class="text-end">$<?= number_format($drug['Tot_Drug_Cst'] ?? 0, 2) ?></td>
-        <td data-label="Beneficiaries" class="text-end"><?= number_format($drug['Tot_Benes'] ?? 0) ?></td>
-        <td data-label="GE65 Claims / Cost" class="text-end">
-            <?= htmlspecialchars($drug['GE65_Sprsn_Flag'] ?? '') ?> 
-            <?= number_format($drug['GE65_Tot_Clms'] ?? 0) ?> / 
-            $<?= number_format($drug['GE65_Tot_Drug_Cst'] ?? 0, 2) ?>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-</tbody>
-                      
-                      
-                      
+                        <tbody>
+                            <?php foreach ($drugs as $drug): ?>
+                            <tr>
+                                <td data-label="Brand Name"><?= htmlspecialchars($drug['Brnd_Name'] ?: 'N/A') ?></td>
+                                <td data-label="Generic Name"><?= htmlspecialchars($drug['Gnrc_Name'] ?: 'N/A') ?></td>
+                                <td data-label="Total Claims" class="text-end"><?= number_format($drug['Tot_Clms'] ?? 0) ?></td>
+                                <td data-label="30-Day Fills" class="text-end"><?= number_format($drug['Tot_30day_Fills'] ?? 0, 1) ?></td>
+                                <td data-label="Day Supply" class="text-end"><?= number_format($drug['Tot_Day_Suply'] ?? 0) ?></td>
+                                <td data-label="Drug Cost" class="text-end">$<?= number_format($drug['Tot_Drug_Cst'] ?? 0, 2) ?></td>
+                                <td data-label="Beneficiaries" class="text-end"><?= number_format($drug['Tot_Benes'] ?? 0) ?></td>
+                                <td data-label="GE65 Claims / Cost" class="text-end">
+                                    <?= htmlspecialchars($drug['GE65_Sprsn_Flag'] ?? '') ?> 
+                                    <?= number_format($drug['GE65_Tot_Clms'] ?? 0) ?> / 
+                                    $<?= number_format($drug['GE65_Tot_Drug_Cst'] ?? 0, 2) ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
                 </div>
             <?php endif; ?>
@@ -186,9 +173,15 @@ try {
     </div>
 </div>
 
-</div>
-</main>
-
 <?php include 'footer.php'; ?>
+
+<script>
+// Hide loading overlay once the page is fully loaded
+window.addEventListener('load', function() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.remove('active');
+});
+</script>
+
 </body>
 </html>
