@@ -1,0 +1,273 @@
+/* custom.css - visual enhancements + strong mobile support */
+
+body {
+    background-color: #f5f7fa;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #2c3e50;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1300px;
+    padding: 2rem 1rem;
+}
+
+h1 {
+    font-weight: 700;
+    color: #1a3c6d;
+}
+
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    background: white;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+}
+
+.card-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #34495e;
+}
+
+.form-control-lg {
+    border-radius: 10px;
+    padding: 0.85rem 1.25rem;
+    font-size: 1.15rem;
+    border: 1px solid #ced4da;
+}
+
+.input-group-text {
+    background-color: white;
+    border-radius: 10px 0 0 10px;
+    border-right: none;
+}
+
+.table {
+    margin-bottom: 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #0d6efd;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: none;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.table td.text-end {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-feature-settings: "tnum";
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+.table tfoot {
+    font-weight: 600;
+    background-color: #e9ecef;
+}
+
+.btn {
+    border-radius: 10px;
+    padding: 0.6rem 1.4rem;
+    font-weight: 500;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+}
+
+.text-muted small {
+    font-size: 0.95rem;
+}
+
+/* jQuery UI autocomplete loading spinner */
+.ui-autocomplete-loading {
+    background: white url('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.3/images/ui-anim_basic_16x16.gif') right center no-repeat !important;
+}
+
+/* ────────────────────────────────────────────────
+   MOBILE OPTIMIZATIONS
+───────────────────────────────────────────────── */
+
+@media (max-width: 992px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table thead {
+        display: none; /* Hide header - use data-label instead */
+    }
+
+    .table tbody tr,
+    .table tfoot tr {
+        display: block;
+        margin-bottom: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .table tbody td,
+    .table tfoot td,
+    .table tfoot th {
+        display: block;
+        text-align: right;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .table tbody td::before,
+    .table tfoot td::before,
+    .table tfoot th::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        width: 45%;
+        padding-right: 1rem;
+        white-space: nowrap;
+        font-weight: 600;
+        text-align: left;
+        color: #495057;
+    }
+
+    .table tfoot th[data-label="Category"] {
+        font-size: 1.15rem;
+        color: #0d6efd;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table tfoot td {
+        border-bottom: none;
+    }
+
+    .table tfoot td:last-child {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Hide less important columns on phones */
+    .table td:nth-child(4),  /* 30-Day Fills */
+    .table td:nth-child(5),  /* Day Supply */
+    .table td:nth-child(8)   /* GE65 Claims / Cost */
+    {
+        display: none;
+    }
+
+    /* Highlight important columns */
+    .table td:nth-child(3) {  /* Total Claims */
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #0d6efd;
+    }
+
+    .table td:nth-child(6) {  /* Drug Cost */
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .table tfoot th,
+    .table tfoot td {
+        font-size: 1.05rem;
+    }
+}
+
+/* Responsive table scroll fallback */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table tbody td a:hover {
+    text-decoration: underline !important;
+}
+
+/* Sticky footer setup */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1 0 auto; /* Grow to push footer down */
+}
+
+.sticky-footer {
+    flex-shrink: 0; /* Don't let footer shrink */
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Optional: make it look even more official */
+.sticky-footer i.bi-lock-fill {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+/* Loading overlay & spinner */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    border-radius: 0.375rem; /* match card/table rounding */
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.4em;
+}
+
+/* For input fields during autocomplete */
+.ui-autocomplete-loading {
+    background: white url('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.3/images/ui-anim_basic_16x16.gif') right center no-repeat !important;
+}
