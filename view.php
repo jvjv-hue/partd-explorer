@@ -22,7 +22,7 @@ try {
         die("<div class='container mt-5'><div class='alert alert-warning'>No data found for NPI $npi.</div></div>");
     }
 
-    // Aggregated drugs
+    // Aggregated drugs with unique prescriber count per drug
     $stmt = $pdo->prepare("
         SELECT 
             Brnd_Name,
@@ -38,7 +38,8 @@ try {
             SUM(GE65_Tot_Drug_Cst) AS GE65_Tot_Drug_Cst,
             SUM(GE65_Tot_Day_Suply) AS GE65_Tot_Day_Suply,
             MAX(GE65_Bene_Sprsn_Flag) AS GE65_Bene_Sprsn_Flag,
-            SUM(GE65_Tot_Benes) AS GE65_Tot_Benes
+            SUM(GE65_Tot_Benes) AS GE65_Tot_Benes,
+            COUNT(DISTINCT Prscrbr_NPI) AS unique_prescribers
         FROM mup_dpr
         WHERE Prscrbr_NPI = :npi
         GROUP BY Brnd_Name, Gnrc_Name
@@ -145,6 +146,7 @@ try {
                                 <th class="text-end">Day Supply</th>
                                 <th class="text-end">Drug Cost</th>
                                 <th class="text-end">Beneficiaries</th>
+                                <th class="text-end">Prescribers</th>
                                 <th class="text-end">GE65 Claims / Cost</th>
                             </tr>
                         </thead>
@@ -158,6 +160,12 @@ try {
                                 <td data-label="Day Supply" class="text-end"><?= number_format($drug['Tot_Day_Suply'] ?? 0) ?></td>
                                 <td data-label="Drug Cost" class="text-end">$<?= number_format($drug['Tot_Drug_Cst'] ?? 0, 2) ?></td>
                                 <td data-label="Beneficiaries" class="text-end"><?= number_format($drug['Tot_Benes'] ?? 0) ?></td>
+                                <td data-label="Prescribers" class="text-end">
+                                    <a href="drug.php?brand=<?= urlencode($drug['Brnd_Name'] ?? '') ?>&generic=<?= urlencode($drug['Gnrc_Name'] ?? '') ?>" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <?= number_format($drug['unique_prescribers'] ?? 1) ?> doctor<?= ($drug['unique_prescribers'] ?? 1) != 1 ? 's' : '' ?>
+                                    </a>
+                                </td>
                                 <td data-label="GE65 Claims / Cost" class="text-end">
                                     <?= htmlspecialchars($drug['GE65_Sprsn_Flag'] ?? '') ?> 
                                     <?= number_format($drug['GE65_Tot_Clms'] ?? 0) ?> / 
@@ -176,7 +184,7 @@ try {
 <?php include 'footer.php'; ?>
 
 <script>
-// Hide loading overlay once the page is fully loaded
+// Hide loading overlay once page is fully loaded
 window.addEventListener('load', function() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.remove('active');
